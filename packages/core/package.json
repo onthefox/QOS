@@ -1,0 +1,13 @@
+{
+  "name": "@qwenos/core",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "dependencies": {
+    "@qwenos/event-bus": "workspace:*",
+    "@qwenos/memory": "workspace:*",
+    "@qwenos/mcp-federation": "workspace:*",
+    "@qwenos/command-router": "workspace:*"
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "name": "qwen-os-cli",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "./src/cli.ts",
+  "bin": {
+    "qos": "./src/cli.ts"
+  },
+  "dependencies": {
+    "@qwenos/core": "workspace:*",
+    "@qwenos/event-bus": "workspace:*",
+    "@qwenos/memory": "workspace:*",
+    "@qwenos/mcp-federation": "workspace:*"
+  }
+}

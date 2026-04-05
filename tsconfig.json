@@ -1,0 +1,28 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "lib": ["ES2022"],
+    "outDir": "./dist",
+    "rootDir": ".",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "composite": true,
+    "incremental": true,
+    "paths": {
+      "@qwenos/core": ["./packages/core/src/index.ts"],
+      "@qwenos/event-bus": ["./packages/event-bus/src/index.ts"],
+      "@qwenos/memory": ["./packages/memory/src/index.ts"],
+      "@qwenos/mcp-federation": ["./packages/mcp-federation/src/index.ts"],
+      "@qwenos/command-router": ["./packages/command-router/src/index.ts"]
+    }
+  },
+  "exclude": ["node_modules", "dist", "**/node_modules/**"]
+}
