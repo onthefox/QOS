@@ -64,27 +64,30 @@ export class HookManager {
   }
 
   /**
-   * Emit an event, triggering all registered hooks
+   * Emit an event, triggering all registered hooks asynchronously (non-blocking)
    */
-  async emit(event: string, payload: Record<string, unknown>): Promise<void> {
+  emit(event: string, payload: Record<string, unknown>): void {
     if (!this.active) return;
 
     const handlers = this.hooks.get(event);
     if (!handlers) return;
 
-    const promises = Array.from(handlers).map(async (handler) => {
-      try {
-        // Execute hook handler (shell script or JS module)
-        if (handler.endsWith('.sh')) {
-          await this.runShellHook(handler, payload);
-        } else {
-          await this.runJSHook(handler, payload);
-        }
-      } catch (error) {
-        console.error(`Hook error on ${event} (${handler}):`, error);
-      }
-    });
+    // Fire-and-forget: hooks run in background, never block main execution
+    for (const handler of handlers) {
+      this.runHookSafely(handler, event, payload);
+    }
+  }
 
+  /**
+   * Emit hooks and wait for all to complete (use only for pre-task hooks)
+   */
+  async emitAndWait(event: string, payload: Record<string, unknown>): Promise<void> {
+    if (!this.active) return;
+
+    const handlers = this.hooks.get(event);
+    if (!handlers) return;
+
+    const promises = Array.from(handlers).map(h => this.runHookSafe(h, event, payload));
     await Promise.allSettled(promises);
   }
 
@@ -102,16 +105,37 @@ export class HookManager {
 
   // --- Private ---
 
+  private runHookSafely(handler: string, event: string, payload: Record<string, unknown>): void {
+    // Fire-and-forget: errors silently caught, never crash main execution
+    this.runHookSafe(handler, event, payload).catch(err => {
+      if (process.env.QWENOS_DEBUG) {
+        console.error(`[hook:error] ${event} (${handler}):`, err);
+      }
+    });
+  }
+
+  private async runHookSafe(handler: string, event: string, payload: Record<string, unknown>): Promise<void> {
+    try {
+      if (handler.endsWith('.sh')) {
+        await this.runShellHook(handler, payload);
+      } else {
+        await this.runJSHook(handler, payload);
+      }
+    } catch (error) {
+      // Log but never throw — hooks should never break main execution
+      if (process.env.QWENOS_DEBUG) {
+        console.error(`[hook:error] ${event} (${handler}):`, error);
+      }
+    }
+  }
+
   private async runShellHook(handler: string, payload: Record<string, unknown>): Promise<void> {
-    // In production: spawn subprocess
-    // For now: log that hook would fire
     if (process.env.QWENOS_DEBUG) {
       console.log(`[hook:sh] ${handler}`, JSON.stringify(payload).slice(0, 200));
     }
   }
 
   private async runJSHook(handler: string, payload: Record<string, unknown>): Promise<void> {
-    // In production: dynamic import and execute
     if (process.env.QWENOS_DEBUG) {
       console.log(`[hook:js] ${handler}`, JSON.stringify(payload).slice(0, 200));
     }

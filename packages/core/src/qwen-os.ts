@@ -28,13 +28,13 @@ export class QwenOS {
   readonly skillManager: SkillManager;
 
   /** Memory instance (single AgentDB + HNSW) */
-  private memory: unknown;
+  private memory: import('@qwenos/memory').UnifiedMemory | null = null;
 
   /** Event bus instance (black-bridges) */
-  private eventBus: unknown;
+  private eventBus: import('@qwenos/event-bus').EventBus | null = null;
 
   /** MCP federation layer */
-  private mcpFederation: unknown;
+  private mcpFederation: import('@qwenos/mcp-federation').MCPFederation | null = null;
 
   /** Application state */
   private initialized = false;
@@ -91,16 +91,18 @@ export class QwenOS {
   async execute(command: string, args: Record<string, unknown> = {}): Promise<CommandResult> {
     if (!this.initialized) await this.initialize();
 
-    await this.hookManager.emit('pre-task', { command, args });
+    // Pre-task hooks MUST complete before execution (blocking)
+    await this.hookManager.emitAndWait('pre-task', { command, args });
     const start = Date.now();
 
     try {
       const result = await this.commandRouter.execute(command, args, this.createContext());
-      await this.hookManager.emit('post-task', { command, args, result });
+      // Post-task hooks are fire-and-forget (non-blocking)
+      this.hookManager.emit('post-task', { command, args, result });
       return result;
     } catch (error) {
       const err = error instanceof Error ? error.message : String(error);
-      await this.hookManager.emit('task-error', { command, args, error: err });
+      this.hookManager.emit('task-error', { command, args, error: err });
       return {
         success: false,
         output: '',
@@ -167,25 +169,53 @@ export class QwenOS {
   // --- Private ---
 
   private async initMemory(): Promise<void> {
-    // Unified AgentDB + HNSW - single instance
-    this.emit('memory:init', {});
+    const { UnifiedMemory } = await import('@qwenos/memory');
+    this.memory = new UnifiedMemory({
+      namespace: this.config.memory.namespace,
+      hnswEnabled: this.config.memory.hnsw.enabled,
+      path: this.config.memory.path,
+    });
+    this.emit('memory:init', { path: this.config.memory.path });
   }
 
   private async initEventBus(): Promise<void> {
-    // Black-bridges event bus
-    this.emit('eventbus:init', {});
+    const { EventBus } = await import('@qwenos/event-bus');
+    this.eventBus = new EventBus();
+    this.emit('eventbus:init', { transport: this.config.events.transport });
   }
 
   private async initMCPFederation(): Promise<void> {
-    // Unified MCP server federation
-    this.emit('mcp:init', {});
+    const { MCPFederation } = await import('@qwenos/mcp-federation');
+    this.mcpFederation = new MCPFederation();
+    // Register configured MCP servers
+    for (const server of this.config.mcp.servers) {
+      this.mcpFederation.registerServer({
+        id: server.name,
+        name: server.name,
+        transport: server.transport,
+        url: server.url,
+        tools: server.tools?.map(name => ({
+          name, description: `Tool from ${server.name}`, inputSchema: {}, serverId: server.name,
+        })) ?? [],
+        status: 'disconnected',
+      });
+    }
+    this.emit('mcp:init', { servers: this.config.mcp.servers.length });
   }
 
   private createContext(): CommandContext {
     return {
       env: process.env as Record<string, string>,
-      memory: this.memory as CommandContext['memory'],
-      events: this.eventBus as CommandContext['events'],
+      memory: this.memory ? {
+        search: (q: string) => this.memory!.search({ text: q }),
+        store: (k: string, v: unknown) => this.memory!.store(k, { content: String(v) }),
+      } : undefined,
+      events: this.eventBus ? {
+        emit: (type: string, payload: unknown) => {
+          this.eventBus!.emit(type as any, payload);
+          return Promise.resolve();
+        },
+      } : undefined,
     };
   }
 
@@ -201,8 +231,8 @@ export class QwenOS {
       version: '1.0.0',
       workspace: partial.workspace ?? process.cwd(),
       model: partial.model ?? {
-        provider: 'openai',
-        name: 'gpt-4o',
+        provider: 'qwen',
+        name: 'qwen3-coder-plus',
       },
       agents: partial.agents ?? {
         maxConcurrent: 15,
