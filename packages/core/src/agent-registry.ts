@@ -98,5 +98,24 @@ export class AgentRegistry {
 
   // --- Private ---
 
-  // No longer needed — agents built by buildAgents()
+  private async createAgent(config: AgentConfig): Promise<Agent> {
+    return {
+      config,
+      state: 'idle' as AgentState,
+      execute: async (task: string, _ctx?: Record<string, unknown>) => ({
+        success: true,
+        output: `[${config.name}] executed: ${task}`,
+        durationMs: 0,
+      }),
+      status: () => ({
+        id: config.id,
+        state: 'idle' as AgentState,
+        uptimeMs: 0,
+        tasksCompleted: 0,
+        lastActivity: new Date(),
+        memoryUsageBytes: 0,
+      }),
+      dispose: async () => {},
+    };
+  }
 }

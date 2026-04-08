@@ -64,13 +64,13 @@ export class CommandRouter {
    */
   list(category?: string): Array<{ name: string; category: string; description: string; aliases: string[] }> {
     const entries = Array.from(this.commands.values());
-    const filtered = category ? entries.filter(c => c.config.category === category) : entries;
+    const filtered = category ? entries.filter(c => c.category === category) : entries;
 
     return filtered.map(c => ({
-      name: c.config.name,
-      category: c.config.category,
-      description: c.config.description,
-      aliases: c.config.aliases ?? [],
+      name: c.name,
+      category: c.category,
+      description: c.description,
+      aliases: c.aliases ?? [],
     }));
   }
 
@@ -88,7 +88,7 @@ export class CommandRouter {
     return {
       total: this.commands.size,
       aliases: this.aliases.size,
-      categories: new Set(Array.from(this.commands.values()).map(c => c.config.category)).size,
+      categories: new Set(Array.from(this.commands.values()).map(c => c.category)).size,
     };
   }
 

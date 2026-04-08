@@ -4,8 +4,8 @@
  * Single interface for all agents, commands, and tools
  */
 
-import { QwenOS } from '../../packages/core/src/qwen-os.js';
-import type { QwenOSConfig } from '../../packages/core/src/types/config.js';
+import { QwenOS } from '@qwenos/core';
+import type { QwenOSConfig } from '@qwenos/core';
 
 const VERSION = '1.0.0';
 

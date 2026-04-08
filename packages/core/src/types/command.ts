@@ -10,35 +10,27 @@ export type CommandCategory =
   | 'sparc'         // spec, pseudocode, refinement, architecture
   | 'automation'    // smart-agents, self-healing, session-memory
   | 'monitoring'    // status, metrics, swarm-monitor
-  | 'optimization'; // topology-optimize, parallel-execute, cache-manage
+  | 'optimization'  // topology-optimize, parallel-execute, cache-manage
+  | 'system'        // help, status, agents, commands, skills, version, doctor, config
+  | 'execution'     // run, execute, workflow, sparc-spec
+  | 'memory'        // memory (store, get, search, delete, stats)
+  | 'swarm'         // swarm, spawn
+  | 'security'      // security-scan
+  | 'testing'       // test
+  | 'devops'        // build, deploy
+  | 'documentation'; // sparc-spec
 
-export interface CommandConfig {
+export interface Command {
   /** Command name (used in CLI invocation) */
   name: string;
   /** Category grouping */
   category: CommandCategory;
   /** Description */
   description: string;
-  /** Path to implementation (.md spec or .ts handler) */
-  handler: string;
-  /** Accepts arguments */
-  acceptsArgs: boolean;
-  /** Argument schema (Zod-compatible) */
-  argsSchema?: Record<string, { type: string; required: boolean; description: string }>;
   /** Alias names for backward compatibility */
   aliases?: string[];
-  /** Requires running agent instance */
-  requiresAgent?: boolean;
-  /** Requires active workspace */
-  requiresWorkspace?: boolean;
-}
-
-export interface Command {
-  config: CommandConfig;
   /** Execute command with given arguments */
   execute(args: Record<string, unknown>, context: CommandContext): Promise<CommandResult>;
-  /** Validate arguments before execution */
-  validate(args: Record<string, unknown>): { valid: boolean; errors: string[] };
 }
 
 export interface CommandContext {
