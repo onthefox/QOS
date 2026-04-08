@@ -89,8 +89,20 @@ qos run coder "create REST API"          # Run an agent
 qos run security-reviewer "audit src/"   # Security audit
 
 qos execute plan "build web app"         # Execute a command
-qos execute sparc-spec                   # SPARC specification
+qos memory store key value               # Store memory
+qos memory search "auth context"         # Semantic search
+qos doctor                               # Run diagnostics
 ```
+
+## Documentation
+
+| Document | Description |
+|----------|-------------|
+| [Architecture](docs/ARCHITECTURE.md) | Full system diagram, data flow, event types |
+| [CLI Commands](docs/CLI-COMMANDS.md) | Complete command reference (25 commands) |
+| [Memory Schema](docs/MEMORY-SCHEMA.md) | UnifiedMemory API and data model |
+| [Onboarding](docs/ONBOARDING.md) | Developer cheat sheet |
+| [Landing Page](docs/index.html) | Beautiful project overview page |
 
 ## Monorepo Structure
 

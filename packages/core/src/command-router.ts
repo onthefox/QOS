@@ -3,7 +3,8 @@
  * Single entry point with alias resolution
  */
 
-import type { Command, CommandConfig, CommandContext, CommandResult } from './types/command.js';
+import { buildCommands } from './commands/index.js';
+import type { Command, CommandContext, CommandResult } from './types/command.js';
 
 export class CommandRouter {
   private commands = new Map<string, Command>();
@@ -11,47 +12,21 @@ export class CommandRouter {
 
   /**
    * Register all commands from the unified catalog
+   * Uses buildCommands() to create 25 real command instances
    * Automatically resolves duplicates and sets up aliases
    */
   async registerAll(): Promise<void> {
-    // Core commands
-    this.register('plan', 'core', 'Create a structured plan for complex tasks', { requiresWorkspace: true });
-    this.register('orchestrate', 'core', 'Orchestrate multi-step workflows', {});
-    this.register('verify', 'core', 'Verify code correctness and quality', { requiresWorkspace: true });
-    this.register('checkpoint', 'core', 'Create or restore a checkpoint', {});
+    const cmdList = buildCommands();
 
-    // Analysis commands (deduped: 6 → 3)
-    this.register('bottleneck-detect', 'analysis', 'Detect performance bottlenecks', { requiresWorkspace: true });
-    this.register('performance-report', 'analysis', 'Generate performance report', {});
-    this.register('token-usage', 'analysis', 'Analyze token efficiency and usage', {});
+    for (const cmd of cmdList) {
+      if (this.commands.has(cmd.name)) continue; // Dedup guard
+      this.commands.set(cmd.name, cmd);
 
-    // GitHub commands (deduped: 14 → 6)
-    this.register('pr-manager', 'github', 'Manage pull requests', {});
-    this.register('code-review', 'github', 'Review code changes', { requiresWorkspace: true });
-    this.register('sync-coordinator', 'github', 'Sync across repositories', {});
-    this.register('issue-tracker', 'github', 'Track and triage issues', {});
-    this.register('release-manager', 'github', 'Manage releases', {});
-    this.register('repo-analyze', 'github', 'Analyze repository structure', { requiresWorkspace: true });
-
-    // SPARC commands (deduped: 15 → 4)
-    this.register('sparc', 'sparc', 'Run full SPARC methodology', { requiresWorkspace: true });
-    this.register('sparc-spec', 'sparc', 'Write specification (SPARC)', {});
-    this.register('sparc-design', 'sparc', 'Design architecture (SPARC)', {});
-    this.register('sparc-refine', 'sparc', 'Refine code (SPARC)', { requiresWorkspace: true });
-
-    // Automation commands
-    this.register('smart-agents', 'automation', 'Manage auto-spawning agents', {});
-    this.register('self-healing', 'automation', 'Enable self-healing mode', {});
-    this.register('session-memory', 'automation', 'View session memory context', {});
-
-    // Monitoring commands
-    this.register('status', 'monitoring', 'Show system status', {});
-    this.register('swarm-monitor', 'monitoring', 'Monitor active swarms', {});
-
-    // Optimization commands
-    this.register('topology-optimize', 'optimization', 'Optimize agent topology', {});
-    this.register('parallel-execute', 'optimization', 'Execute tasks in parallel', {});
-    this.register('cache-manage', 'optimization', 'Manage caching layer', {});
+      // Register aliases
+      for (const alias of (cmd.aliases ?? [])) {
+        this.aliases.set(alias, cmd.name);
+      }
+    }
   }
 
   /**
@@ -65,23 +40,23 @@ export class CommandRouter {
       return {
         success: false,
         output: '',
-        error: `Command "${name}" not found. Run "qos status" for available commands.`,
-        durationMs: 0,
-      };
-    }
-
-    const validation = cmd.validate(args);
-    if (!validation.valid) {
-      return {
-        success: false,
-        output: '',
-        error: `Invalid arguments: ${validation.errors.join(', ')}`,
+        error: `Command "${name}" not found. Run "qos help" for available commands.`,
         durationMs: 0,
       };
     }
 
     const start = Date.now();
-    return cmd.execute(args, context);
+    try {
+      return await cmd.execute(args, context);
+    } catch (error) {
+      const err = error instanceof Error ? error.message : String(error);
+      return {
+        success: false,
+        output: '',
+        error: err,
+        durationMs: Date.now() - start,
+      };
+    }
   }
 
   /**
@@ -120,55 +95,6 @@ export class CommandRouter {
   // --- Private ---
 
   private resolveName(name: string): string {
-    // Check aliases first
     return this.aliases.get(name) ?? name;
-  }
-
-  private register(name: string, category: string, description: string, extras: Partial<CommandConfig>): void {
-    if (this.commands.has(name)) return; // Dedup guard
-
-    const config: CommandConfig = {
-      name,
-      category: category as any,
-      description,
-      handler: `commands/${category}/${name}.md`,
-      acceptsArgs: true,
-      requiresWorkspace: extras.requiresWorkspace ?? false,
-      ...extras,
-    };
-
-    // Register aliases for backward compatibility
-    const aliasMap: Record<string, string[]> = {
-      'pr-manager': ['pr', 'pull-request'],
-      'code-review': ['review', 'lint'],
-      'status': ['dashboard', 'monitor'],
-      'plan': ['plan-mode', 'architect'],
-      'verify': ['test', 'validate'],
-      'sparc': ['sparc-mode', 'sparc-run'],
-      'bottleneck-detect': ['bottleneck', 'perf-detect'],
-      'performance-report': ['perf-report', 'report'],
-      'swarm-monitor': ['swarm', 'swarm-status'],
-    };
-
-    const cmd: Command = {
-      config,
-      execute: async (args, ctx) => {
-        // Execute command handler (loads .md spec + runs through agent)
-        return {
-          success: true,
-          output: `[${name}] executed`,
-          metadata: { command: name, args, category },
-          durationMs: 0,
-        };
-      },
-      validate: (args) => ({ valid: true, errors: [] }),
-    };
-
-    this.commands.set(name, cmd);
-
-    // Register aliases
-    for (const alias of (aliasMap[name] ?? [])) {
-      this.aliases.set(alias, name);
-    }
   }
 }

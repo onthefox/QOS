@@ -9,3 +9,7 @@ export { AgentRegistry } from './agent-registry.js';
 export { CommandRouter } from './command-router.js';
 export { HookManager } from './hook-manager.js';
 export { SkillManager } from './skill-manager.js';
+
+// Agent & Command builders
+export { buildAgents } from './agents/index.js';
+export { buildCommands } from './commands/index.js';
