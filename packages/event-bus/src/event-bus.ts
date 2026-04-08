@@ -57,7 +57,10 @@ export class EventBus {
     for (const [pattern, callbacks] of this.subscribers) {
       if (this.matchesPattern(event.type, pattern)) {
         for (const cb of callbacks) {
-          cb(event).catch(err => console.error('Event handler error:', err));
+          const result = cb(event);
+          if (result instanceof Promise) {
+            result.catch((err: unknown) => console.error('Event handler error:', err));
+          }
         }
       }
     }

@@ -19,7 +19,6 @@
   "keywords": ["ai", "agent", "orchestration", "mcp", "swarm"],
   "license": "MIT",
   "dependencies": {
-    "agentdb": "^3.0.0",
     "zod": "^3.24.0",
     "uuid": "^10.0.0"
   },

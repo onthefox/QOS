@@ -6,7 +6,7 @@
 import type { MemoryEntry, MemoryQuery, MemoryResult } from './types.js';
 
 export class UnifiedMemory {
-  private store = new Map<string, MemoryEntry>();
+  private memories = new Map<string, MemoryEntry>();
   private namespace: string;
   private hnswEnabled: boolean;
 
@@ -21,7 +21,7 @@ export class UnifiedMemory {
   async store(key: string, data: Omit<Partial<MemoryEntry>, 'key'>): Promise<void> {
     const fullKey = `${this.namespace}:${key}`;
 
-    const existing = this.store.get(fullKey);
+    const existing = this.memories.get(fullKey);
     const entry: MemoryEntry = {
       key: fullKey,
       type: data.type ?? 'episodic',
@@ -35,7 +35,7 @@ export class UnifiedMemory {
       accessCount: (existing?.accessCount ?? 0) + 1,
     };
 
-    this.store.set(fullKey, entry);
+    this.memories.set(fullKey, entry);
   }
 
   /**
@@ -43,7 +43,7 @@ export class UnifiedMemory {
    */
   async get(key: string): Promise<MemoryEntry | null> {
     const fullKey = `${this.namespace}:${key}`;
-    const entry = this.store.get(fullKey);
+    const entry = this.memories.get(fullKey);
     if (entry) {
       entry.accessedAt = new Date();
       entry.accessCount++;
@@ -56,7 +56,7 @@ export class UnifiedMemory {
    * Search memories with optional semantic similarity
    */
   async search(query: MemoryQuery): Promise<MemoryResult[]> {
-    let results = Array.from(this.store.values());
+    let results = Array.from(this.memories.values());
 
     // Filter by type
     if (query.type) {
@@ -103,14 +103,14 @@ export class UnifiedMemory {
    */
   async delete(key: string): Promise<boolean> {
     const fullKey = `${this.namespace}:${key}`;
-    return this.store.delete(fullKey);
+    return this.memories.delete(fullKey);
   }
 
   /**
    * Get memory statistics
    */
   stats(): { total: number; byType: Record<string, number>; bySource: Record<string, number> } {
-    const entries = Array.from(this.store.values());
+    const entries = Array.from(this.memories.values());
     const byType: Record<string, number> = {};
     const bySource: Record<string, number> = {};
 
@@ -126,7 +126,7 @@ export class UnifiedMemory {
    * Clear all memories (debug only)
    */
   clear(): void {
-    this.store.clear();
+    this.memories.clear();
   }
 
   // --- Private ---

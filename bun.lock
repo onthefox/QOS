@@ -1,0 +1,86 @@
+{
+  "lockfileVersion": 1,
+  "configVersion": 1,
+  "workspaces": {
+    "": {
+      "name": "qwen-os",
+      "dependencies": {
+        "uuid": "^10.0.0",
+        "zod": "^3.24.0",
+      },
+      "devDependencies": {
+        "@types/bun": "latest",
+        "@types/uuid": "^10.0.0",
+        "typescript": "^5.7.0",
+      },
+    },
+    "apps/cli": {
+      "name": "qwen-os-cli",
+      "version": "1.0.0",
+      "bin": {
+        "qos": "./src/cli.ts",
+      },
+      "dependencies": {
+        "@qwenos/core": "workspace:*",
+        "@qwenos/event-bus": "workspace:*",
+        "@qwenos/mcp-federation": "workspace:*",
+        "@qwenos/memory": "workspace:*",
+      },
+    },
+    "packages/command-router": {
+      "name": "@qwenos/command-router",
+      "version": "1.0.0",
+    },
+    "packages/core": {
+      "name": "@qwenos/core",
+      "version": "1.0.0",
+      "dependencies": {
+        "@qwenos/command-router": "workspace:*",
+        "@qwenos/event-bus": "workspace:*",
+        "@qwenos/mcp-federation": "workspace:*",
+        "@qwenos/memory": "workspace:*",
+      },
+    },
+    "packages/event-bus": {
+      "name": "@qwenos/event-bus",
+      "version": "1.0.0",
+    },
+    "packages/mcp-federation": {
+      "name": "@qwenos/mcp-federation",
+      "version": "1.0.0",
+    },
+    "packages/memory": {
+      "name": "@qwenos/memory",
+      "version": "1.0.0",
+    },
+  },
+  "packages": {
+    "@qwenos/command-router": ["@qwenos/command-router@workspace:packages/command-router"],
+
+    "@qwenos/core": ["@qwenos/core@workspace:packages/core"],
+
+    "@qwenos/event-bus": ["@qwenos/event-bus@workspace:packages/event-bus"],
+
+    "@qwenos/mcp-federation": ["@qwenos/mcp-federation@workspace:packages/mcp-federation"],
+
+    "@qwenos/memory": ["@qwenos/memory@workspace:packages/memory"],
+
+    "@types/bun": ["@types/bun@1.3.11", "", { "dependencies": { "bun-types": "1.3.11" } }, "sha512-5vPne5QvtpjGpsGYXiFyycfpDF2ECyPcTSsFBMa0fraoxiQyMJ3SmuQIGhzPg2WJuWxVBoxWJ2kClYTcw/4fAg=="],
+
+    "@types/node": ["@types/node@25.5.2", "", { "dependencies": { "undici-types": "~7.18.0" } }, "sha512-tO4ZIRKNC+MDWV4qKVZe3Ql/woTnmHDr5JD8UI5hn2pwBrHEwOEMZK7WlNb5RKB6EoJ02gwmQS9OrjuFnZYdpg=="],
+
+    "@types/uuid": ["@types/uuid@10.0.0", "", {}, "sha512-7gqG38EyHgyP1S+7+xomFtL+ZNHcKv6DwNaCZmJmo1vgMugyF3TCnXVg4t1uk89mLNwnLtnY3TpOpCOyp1/xHQ=="],
+
+    "bun-types": ["bun-types@1.3.11", "", { "dependencies": { "@types/node": "*" } }, "sha512-1KGPpoxQWl9f6wcZh57LvrPIInQMn2TQ7jsgxqpRzg+l0QPOFvJVH7HmvHo/AiPgwXy+/Thf6Ov3EdVn1vOabg=="],
+
+    "qwen-os-cli": ["qwen-os-cli@workspace:apps/cli"],
+
+    "typescript": ["typescript@5.9.3", "", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw=="],
+
+    "undici-types": ["undici-types@7.18.2", "", {}, "sha512-AsuCzffGHJybSaRrmr5eHr81mwJU3kjw6M+uprWvCXiNeN9SOGwQ3Jn8jb8m3Z6izVgknn1R0FTCEAP2QrLY/w=="],
+
+    "uuid": ["uuid@10.0.0", "", { "bin": { "uuid": "dist/bin/uuid" } }, "sha512-8XkAphELsDnEGrDxUOHB3RGvXz6TeuYSGEZBOjtTtPm2lwhGBjLgOzLHB63IUWfBpNucQjND6d3AOudO+H3RWQ=="],
+
+    "zod": ["zod@3.25.76", "", {}, "sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ=="],
+  }
+}

@@ -208,7 +208,7 @@ export class QwenOS {
       env: process.env as Record<string, string>,
       memory: this.memory ? {
         search: (q: string) => this.memory!.search({ text: q }),
-        store: (k: string, v: unknown) => this.memory!.store(k, { content: String(v) }),
+        store: async (k: string, v: unknown) => { await this.memory!.store(k, { content: String(v) }); },
       } : undefined,
       events: this.eventBus ? {
         emit: (type: string, payload: unknown) => {
